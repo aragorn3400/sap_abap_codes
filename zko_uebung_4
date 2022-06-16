@@ -27,7 +27,7 @@ PERFORM set_fcat.
 PERFORM set_layout.
 PERFORM modif_fcat.
 PERFORM display_data.
-*BREAK-POINT.
+
 *&---------------------------------------------------------------------*
 *&      FORm  GET_DATA
 *&---------------------------------------------------------------------*
