@@ -22,6 +22,8 @@ DATA: it_fieldcat TYPE  lvc_t_fcat,
 
 DATA: is_layout TYPE  LVC_S_LAYO.
 
+START-OF-SELECTION.
+
 PERFORM get_data.
 PERFORM set_fcat.
 PERFORM set_layout.
