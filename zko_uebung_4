@@ -20,7 +20,7 @@ DATA: ls_marc LIKE LINE OF it_marc.
 DATA: it_fieldcat TYPE  lvc_t_fcat,
       ls_fieldcat LIKE LINE OF it_fieldcat.
 
-DATA: is_layout TYPE  LVC_S_LAYO.
+DATA: is_layout TYPE  LVC_S_LAYO. 
 
 START-OF-SELECTION.
 
