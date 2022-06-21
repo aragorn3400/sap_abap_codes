@@ -1,0 +1,100 @@
+REPORT zko_ornek_08.
+
+"Ein Beispiel für Super und Me Schlüssel mit lokaler und untergeordneter Klasse
+
+Super Keyword------------
+
+CLASS lcl_shape DEFINITION.
+  PUBLIC SECTION.
+    METHODS: constructor,
+      show_shape.
+ENDCLASS.
+
+CLASS lcl_shape IMPLEMENTATION.
+  METHOD constructor.
+    WRITE:'Superclass SHAPE costructor is called'.
+  ENDMETHOD.
+
+  METHOD show_shape.
+    WRITE:/ 'Showing Shape'.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_circle DEFINITION INHERITING FROM lcl_shape.
+  PUBLIC SECTION.
+    METHODS: constructor,
+             show_shape REDEFINITION.
+ENDCLASS.
+
+CLASS lcl_circle IMPLEMENTATION.
+  METHOD constructor.
+    super->constructor( ).
+    WRITE:/ 'Subclass CIRCLE constructor is called '.
+  ENDMETHOD.
+  
+  METHOD show_shape.
+    super->show_shape( ).
+    WRITE:/ 'Showing Circle'.
+  ENDMETHOD.
+ENDCLASS.
+
+DATA :go_circle TYPE REF TO lcl_circle.
+
+START-OF-SELECTION.
+
+  CREATE OBJECT go_circle.
+
+  go_circle->show_shape( ).
+
+
+Me Keyword------------------
+CLASS lcl_service DEFINITION.
+*  PUBLIC SECTION.
+*    DATA:number TYPE  i VALUE 100.     
+
+*    METHODS: get_number IMPORTING iv_number TYPE int2
+*                        EXPORTING ev_number TYPE int2 .
+*
+*    METHODS:write_numbers IMPORTING iv_number TYPE int2.
+*
+*    METHODS: write_attribute.
+*ENDCLASS.
+*
+*CLASS lcl_service IMPLEMENTATION.
+*
+*  METHOD get_number.
+*    ev_number = iv_number * 2.
+*  ENDMETHOD.
+*
+*  METHOD write_numbers.
+*    WRITE: iv_number.
+*  ENDMETHOD.
+*
+*  METHOD write_attribute.
+*    DATA:number TYPE int2 VALUE 500.
+*    WRITE: /'Global Value as Attribute;' , me->number.
+*    WRITE: / 'Lokal Value in Metod', number.
+*  ENDMETHOD.
+*
+*ENDCLASS.
+*
+*START-OF-SELECTION.
+*
+*  DATA:go_class  TYPE REF TO lcl_service,
+*       gv_number TYPE int2.
+*
+*  CREATE OBJECT go_class.
+*
+*  CALL METHOD go_class->get_number   
+*    EXPORTING
+*      iv_number = 10
+*    IMPORTING
+*      ev_number = gv_number.
+*
+*
+*
+**  go_class->write_numbers( iv_number = gv_number ).  
+**
+**  go_class->write_attribute( ).                     
+
+
