@@ -5,7 +5,7 @@
 *&---------------------------------------------------------------------*
 REPORT zko_uebung_33.
 
-" Ein Beispiel für eine dynamische Tabelle
+" Ein Beispiel für eine dynamische Tabelle mit Inline-Deklaration
 
 INCLUDE zko_uebung_33_top.
 INCLUDE zko_uebung_33_frm.
