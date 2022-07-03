@@ -1,0 +1,260 @@
+*&---------------------------------------------------------------------*
+*& Report ZKO_UEBUNG_33
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zko_uebung_33.
+
+" Ein Beispiel für eine dynamische Tabelle
+
+INCLUDE zko_uebung_33_top.
+INCLUDE zko_uebung_33_frm.
+
+
+START-OF-SELECTION.
+
+  PERFORM get_data.
+  PERFORM set_fcat.
+  PERFORM create_dyn_table.
+  PERFORM fill_dyn_table.
+  PERFORM display.
+  
+  
+  
+  *&---------------------------------------------------------------------*
+*& Include          ZKO_UEBUNG_33_TOP
+*&---------------------------------------------------------------------*
+
+TYPES:BEGIN OF gty_table,
+        id_no       TYPE n LENGTH 11,
+        name(30),
+        surname(30),
+        firm(30),
+        bank(30),
+        box,
+      END OF gty_table.
+      
+TYPES:gtt_table TYPE TABLE OF gty_table WITH EMPTY KEY.
+
+DATA: lv_number TYPE i.
+
+TYPES:BEGIN OF gty_id,
+        id_no TYPE n LENGTH 11,
+      END OF gty_id.
+
+DATA:gt_id TYPE TABLE OF gty_id.     
+
+TYPES :BEGIN OF gty_firm,
+         firm(30),
+       END OF gty_firm.
+
+DATA:gt_firm TYPE TABLE OF gty_firm.
+    
+TYPES:BEGIN OF gty_bank,
+        bank(30),
+      END OF gty_bank.
+
+DATA:gt_bank TYPE TABLE OF gty_bank.
+     
+FIELD-SYMBOLS: <t_tab>  TYPE STANDARD TABLE,
+               <st_tab>,
+               <fs_val> TYPE any.
+
+DATA:dt_1 TYPE REF TO data,
+     ds_1 TYPE REF TO data.
+     
+*&---------------------------------------------------------------------*
+*& Include          ZKO_UEBUNG_33_FRM
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form GET_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_data .
+
+DATA(gt_table) = VALUE gtt_table( ( id_no = 74837465858 name = 'MERAL' surname = 'YAPRAK' firm = 'DURMAZ_COMPANY' bank = 'AKBANK' )
+                                            ( id_no = 74837465858 name = 'MERAL' surname = 'YAPRAK' firm = 'DURMAZ_COMPANY' bank = 'VAKIFBANK' )
+                                            ( id_no = 74837465866 name = 'HİKMET' surname = 'PAMUK' firm = 'BATMAZ_COMPANY' bank = 'AKBANK' )
+                                            ( id_no = 65578945512 name = 'AYDIN' surname = 'BAŞSIZ' firm = 'GREEK_AIRLINES' bank = 'VAKIFBANK' )
+                                            ( id_no = 54778965123 name = 'ECEM' surname = 'BAYA' firm = 'ABC_COMPANY' bank = 'ZIRAAT_BANK' )
+                                            ( id_no = 75542216622 name = 'UMUT' surname = 'ERKAN' firm = 'MOONSOFT' bank = 'GARANTI_BANK' )
+                                            ( id_no = 74837465831 name = 'UMUT' surname = 'ER' firm = 'STARSOFT' bank = 'AKBANK' )
+                                            ( id_no = 74837465831 name = 'UMUT' surname = 'ER' firm = 'STARSOFT' bank = 'XYZ_BANK' ) ).
+
+
+LOOP AT gt_table ASSIGNING FIELD-SYMBOL(<gs_table>) .
+  APPEND INITIAL LINE TO gt_id ASSIGNING FIELD-SYMBOL(<gs_id>).
+  <gs_id>-id_no = <gs_table>-id_no.
+
+  APPEND INITIAL LINE TO gt_firm ASSIGNING FIELD-SYMBOL(<gs_firm>).
+  <gs_firm>-firm = <gs_table>-firm.
+
+  APPEND INITIAL LINE TO gt_bank ASSIGNING FIELD-SYMBOL(<gs_bank>).
+  <gs_bank>-bank = <gs_table>-bank.
+ENDLOOP.
+
+
+
+SORT gt_id ASCENDING BY id_no.
+DELETE ADJACENT DUPLICATES FROM gt_id.
+
+SORT gt_firm ASCENDING BY firm.
+DELETE ADJACENT DUPLICATES FROM gt_firm.
+
+SORT gt_bank ASCENDING BY bank.
+DELETE ADJACENT DUPLICATES FROM gt_bank.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_fcat .
+
+DATA(gt_fcat) = VALUE lvc_t_fcat( ( fieldname  = 'BOX' coltext = 'secim' outputlen = 2 )
+                                  ( fieldname  = 'ID_NO' coltext = 'ID Number' outputlen = 20 )
+                                  ( fieldname  = 'NAME' coltext = 'NAME' outputlen = 20 )
+                                  ( fieldname  = 'SURNAME' coltext = 'SURNAME' outputlen = 20 ) ).
+
+gt_fcat = VALUE #( BASE gt_fcat FOR gs_firm IN gt_firm ( fieldname  = gs_firm-firm
+                                                         coltext    = gs_firm-firm
+                                                         outputlen  = 20 ) ).  
+
+gt_fcat = VALUE #( BASE gt_fcat FOR gs_bank IN gt_bank ( fieldname  = gs_bank-bank
+                                                         coltext    = gs_bank-bank
+                                                         outputlen  = 20 ) ).
+ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_DYN_TABLE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_dyn_table .
+  CALL METHOD cl_alv_table_create=>create_dynamic_table
+  EXPORTING
+    it_fieldcatalog = gt_fcat
+  IMPORTING
+    ep_table        = dt_1.
+
+ASSIGN dt_1->* TO <t_tab>.
+
+CREATE DATA ds_1 LIKE LINE OF <t_tab>.
+
+ASSIGN ds_1->* TO <st_tab>.
+
+LOOP AT gt_id INTO DATA(gs_id) .
+
+  ASSIGN COMPONENT 'ID_NO' OF STRUCTURE <st_tab> TO <fs_val>.
+  <fs_val> = gs_id-id_no.
+  
+  LOOP AT gt_table INTO DATA(gs_table WHERE id_no = gs_id-id_no .
+
+    ASSIGN COMPONENT 'NAME' OF STRUCTURE <st_tab> TO <fs_val>.
+    <fs_val> = gs_table-name.
+    ""debugta <t_tab>a bakalım,ikinci  sütunumuzu da doldurmuş olduk
+
+    ASSIGN COMPONENT 'SURNAME' OF STRUCTURE <st_tab> TO <fs_val>.
+    <fs_val> = gs_table-surname.
+
+
+    ASSIGN COMPONENT gs_table-firm OF STRUCTURE <st_tab> TO <fs_val>.
+    <fs_val> = 'Works in this firm'.
+
+
+    ASSIGN COMPONENT gs_table-bank OF STRUCTURE <st_tab> TO <fs_val>.
+    <fs_val> ='Works with this bank'.
+
+
+  ENDLOOP.
+
+  ASSIGN COMPONENT 'BOX' OF STRUCTURE <st_tab> TO <fs_val>.
+  <fs_val> = lv_number + 1.
+  lv_number = lv_number + 1.
+
+  APPEND <st_tab> TO <t_tab>.
+  CLEAR <st_tab>.
+
+ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form FILL_DYN_TABLE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM fill_dyn_table .
+  ASSIGN dt_1->* TO <t_tab>.
+
+CREATE DATA ds_1 LIKE LINE OF <t_tab>.
+
+ASSIGN ds_1->* TO <st_tab>.
+
+LOOP AT gt_id INTO DATA(gs_id) .
+
+  ASSIGN COMPONENT 'ID_NO' OF STRUCTURE <st_tab> TO <fs_val>.
+  <fs_val> = gs_id-id_no.
+ 
+  LOOP AT gt_table INTO DATA(gs_table) WHERE id_no = gs_id-id_no .
+
+    ASSIGN COMPONENT 'NAME' OF STRUCTURE <st_tab> TO <fs_val>.
+    <fs_val> = gs_table-name.
+   
+
+    ASSIGN COMPONENT 'SURNAME' OF STRUCTURE <st_tab> TO <fs_val>.
+    <fs_val> = gs_table-surname.
+
+
+    ASSIGN COMPONENT gs_table-firm OF STRUCTURE <st_tab> TO <fs_val>.
+    <fs_val> = 'Works in this firm'.
+
+
+    ASSIGN COMPONENT gs_table-bank OF STRUCTURE <st_tab> TO <fs_val>.
+    <fs_val> ='Works with this bank'.
+
+
+  ENDLOOP.
+
+  ASSIGN COMPONENT 'BOX' OF STRUCTURE <st_tab> TO <fs_val>.
+  <fs_val> = lv_number + 1.
+  lv_number = lv_number + 1.
+
+  APPEND <st_tab> TO <t_tab>.
+  CLEAR <st_tab>.
+
+ENDLOOP.
+
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form DISPLAY
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+
+
+CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY_LVC'
+ EXPORTING
+ IT_FIELDCAT_LVC                   = gt_fcat
+ TABLES
+   t_outtab                          = <t_tab>.
+ENDFORM.
