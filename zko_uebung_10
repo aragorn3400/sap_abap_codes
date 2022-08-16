@@ -20,7 +20,7 @@ PERFORM display.
 *&---------------------------------------------------------------------*
 *& Include          ZKO_ORNEK_03_TOP
 *&---------------------------------------------------------------------*
-DATA: gt_scarr    TYPE TABLE OF scarr,
+DATA: gt_scarr    TYPE TABLE OF scarr, 
       gs_scarr    TYPE scarr,
       gt_scarr_01 TYPE TABLE OF scarr,
       gt_fcat     TYPE lvc_t_fcat,
