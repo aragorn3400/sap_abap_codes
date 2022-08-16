@@ -5,6 +5,7 @@
 *&---------------------------------------------------------------------*
 REPORT zko_ornek_03.
 
+" Ein Beispiel für die Aktualisierung der Tabelle durch Erstellen einer Schaltfläche mit GUI-Status
 
 INCLUDE zko_ornek_03_top.
 INCLUDE zko_ornek_03_frm.
