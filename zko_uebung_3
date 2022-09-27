@@ -1,6 +1,6 @@
-REPORT zzko_alv_reuse_alv_kazim_oo.
+REPORT zko_alv_reuse_alv_kazim_oo.
 
-" Ein einfaches Beispiel von ALV(REUSE_ALV_) 
+" Ein einfaches Beispiel von ALV(REUSE_ALV) 
 
 
 INCLUDE zko_alv_reuse_alv_kazim_oo_top.
