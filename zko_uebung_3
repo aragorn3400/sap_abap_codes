@@ -1,91 +1,133 @@
-REPORT zko_uebung_3.
+REPORT zzko_alv_reuse_alv_kazim_oo.
 
-" Ein einfaches Beispiel von ALV mit der Tabelle MARA
+" Ein einfaches Beispiel von ALV(REUSE_ALV_) 
 
-TABLES: mara.
 
-DATA: BEGIN OF it_mara occurs 0,
-        sell  TYPE c LENGTH 1,
-        matnr LIKE mara-matnr,
-        ersda LIKE mara-ersda,
-        ernam LIKE mara-ernam,
-        laeda LIKE mara-laeda,
-        aenam LIKE mara-aenam,
-        vpsta LIKE mara-vpsta,
-        pstat LIKE mara-pstat,
-        lvorm LIKE mara-lvorm,
-      END OF it_mara.
+INCLUDE zko_alv_reuse_alv_kazim_oo_top.
+INCLUDE zko_alv_reuse_alv_kazim_oo_frm.
 
-DATA: it_fieldcat TYPE  slis_t_fieldcat_alv.
-DATA: is_layout TYPE  slis_layout_alv.
 
-PERFORM get_data.
-PERFORM set_layout.
-PERFORM display_data.
+START-OF-SELECTION.
+
+  PERFORM get_data.
+  PERFORM set_fcat.
+  PERFORM set_layout.
+  PERFORM display_alv.
+  
+  
+*&---------------------------------------------------------------------*
+*& Include          ZKO_ALV_REUSE_ALV_KAZIM_OO_TOP
+*&---------------------------------------------------------------------*
+
+
+
+TYPES: BEGIN OF gty_list,
+         carrid    TYPE s_carr_id,
+         fldate    TYPE s_date,
+         planetype TYPE s_planetye,
+         price     TYPE s_price,
+         carrname  TYPE s_carrname,
+         url       TYPE s_carrurl,
+         currcode  TYPE s_currcode,
+       END OF gty_list.
+
+DATA: gt_list TYPE TABLE OF gty_list,
+      gs_list TYPE gty_list.
+
+DATA: gt_fieldcatalog TYPE slis_t_fieldcat_alv,
+      gs_fieldcatalog TYPE slis_fieldcat_alv.
+
+DATA: gs_layout TYPE slis_layout_alv.
 
 *&---------------------------------------------------------------------*
-*&      Form  GET_DATA
+*& Include          ZKO_ALV_REUSE_ALV_KAZIM_OO_FRM
 *&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-*  -->  p1        text
-*  <--  p2        text
-*----------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form GET_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
 FORM get_data .
+  SELECT    sflight~carrid        "Almak istediğimiz satırları yazıyoruz,structure ile aynı sırada yapmamız lazım
+            sflight~fldate
+            sflight~planetype
+            sflight~price
+            scarr~carrname
+            scarr~url
+            scarr~currcode
 
-  SELECT matnr
-         ersda
-         ernam
-         laeda
-         aenam
-         vpsta
-         pstat
-         lvorm FROM mara INTO CORRESPONDING FIELDS OF TABLE it_mara.
-
+          FROM sflight INNER JOIN scarr     
+          ON sflight~carrid EQ scarr~carrid  
+          INTO TABLE gt_list.                
 ENDFORM.
 *&---------------------------------------------------------------------*
-*&      Form  SET_LAYOUT
+*& Form SET_FCAT
 *&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-*  -->  p1        text
-*  <--  p2        text
-*----------------------------------------------------------------------*
-FORM set_layout .
-  is_layout-zebra = 'X'.
-  is_layout-box_fieldname = 'SELL'.
-ENDFORM.
+*& text
 *&---------------------------------------------------------------------*
-*&      Form  DISPLAY_DATA
+*& -->  p1        text
+*& <--  p2        text
 *&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-*  -->  p1        text
-*  <--  p2        text
-*----------------------------------------------------------------------*
-FORM display_data .
 
-  CALL FUNCTION 'REUSE_ALV_FIELDCATALOG_MERGE'
+FORM set_fcat .
+
+ CALL FUNCTION 'REUSE_ALV_FIELDCATALOG_MERGE'
     EXPORTING
       i_program_name         = sy-repid
-      i_internal_tabname     = 'IT_MARA'
+*     i_internal_tabname     = 'GT_LIST'
+      i_structure_name       = 'ZBK_REUSE_OO_FCAT_MERGE1_S'
       i_inclname             = sy-repid
+      i_bypassing_buffer     = 'X'
     CHANGING
-      ct_fieldcat            = it_fieldcat
+      ct_fieldcat            = gt_fieldcatalog
     EXCEPTIONS
       inconsistent_interface = 1
       program_error          = 2
       OTHERS                 = 3.
 
-  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
-    EXPORTING
-      i_callback_program = sy-repid
-      is_layout          = is_layout
-      it_fieldcat        = it_fieldcat
-    TABLES
-      t_outtab           = it_mara
-    EXCEPTIONS
-      program_error      = 1
-      OTHERS             = 2.
+  READ TABLE gt_fieldcatalog ASSIGNING <gfs_fcat> WITH KEY fieldname = 'FLDATE'.  "FLDATE kolonu editable yaptık.
+  IF sy-subrc = 0.
+    <gfs_fcat>-edit = abap_true.
+  ENDIF.
+
 
 ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*& Form SET_LAYOUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_layout .
+  gs_layout-colwidth_optimize = 'X'.            
+  gs_layout-window_titlebar = 'Reuse ALV  '.  
+  gs_layout-zebra = abap_true.
+  gs_layout-edit = abap_true.                       
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display_alv .
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+      is_layout     = gs_layout
+      it_fieldcat   = gt_fieldcatalog
+    TABLES
+      t_outtab      = gt_list
+    EXCEPTIONS
+      program_error = 1
+      OTHERS        = 2.
+ENDFORM.
+ 
