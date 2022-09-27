@@ -1,0 +1,130 @@
+REPORT zko_uebung_12.
+
+
+" Ein Beispiel für eine  Dynpro-Programmierung
+
+ 
+DATA: gv_vorname    TYPE char20,
+      gv_name TYPE char30.
+
+DATA: gv_rad1 TYPE char1,
+      gv_rad2 TYPE xfeld.
+
+DATA: gv_cbox TYPE xfeld.
+
+DATA:gv_alt TYPE i.
+
+DATA:gv_id     TYPE vrm_id,
+     gt_values TYPE vrm_values,
+     gs_values TYPE vrm_value.
+
+DATA : gv_index TYPE i.
+
+DATA: gv_date TYPE datum.
+
+DATA: gs_log TYPE zko_screen_t.
+
+
+START-OF-SELECTION.
+
+  gv_index = 18.
+  DO 60  TIMES.
+    gs_values-key = gv_index.
+    gs_values-text = gv_index.
+    APPEND gs_values TO gt_values.
+    gv_index = gv_index + 1.
+
+  ENDDO.
+
+
+
+  CALL SCREEN 0100.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS '0100'.
+* SET TITLEBAR 'xxx'.
+
+  gv_id = 'gv_alt'.
+
+*  gs_values-key = '1'.               "İçinde tuttuğu anahtar yapı
+*  gs_values-text = '18'.              "Bizimde görebildiğimiz değerler
+*  APPEND gs_values TO gt_values.
+*
+*  gs_values-key = '2'.
+*  gs_values-text = '19'.
+*  APPEND gs_values TO gt_values.
+
+
+
+  CALL FUNCTION 'VRM_SET_VALUES'
+    EXPORTING
+      id              = gv_id
+      values          = gt_values
+    EXCEPTIONS
+      id_illegal_name = 1
+      OTHERS          = 2.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE sy-ucomm .
+    WHEN '&BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN '&CLEAR'.
+      PERFORM clear_data.
+    WHEN '&SAVE'.
+      PERFORM save_data.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Form CLEAR_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM clear_data .
+  CLEAR: gv_vorname,
+             gv_name,
+             gv_alt,
+             gv_cbox,
+             gv_date,
+             gv_rad2.
+  gv_rad1 = abap_true.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SAVE_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM save_data .
+  gs_log-vorname = gv_vorname.
+  gs_log-name = gv_name.
+  gs_log-alt = gv_alt.
+  gs_log-cbox = gv_cbox.
+  gs_log-sdate = gv_date.
+  IF gv_rad1 = abap_true.
+    gs_log-geschlecht = 'K'.
+  ELSE.
+    gs_log-geschlecht = 'E'.
+  ENDIF.
+  INSERT zko_screen_t FROM gs_log .
+  COMMIT WORK AND WAIT.
+
+  MESSAGE 'Die Daten werden in die Tabelle eingetragen.' TYPE 'I' DISPLAY LIKE 'S'.
+
+ENDFORM.
