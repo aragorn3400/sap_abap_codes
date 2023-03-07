@@ -1,0 +1,371 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC401_01_MAIN
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT z13_klassen_ausnahme1_ubung_03.
+
+INCLUDE ZBC401_13_AGENCY_1.
+
+INCLUDE ZBC401_13_CARRIER_1.
+
+INCLUDE ZBC401_13_MAIN_TOP_1.
+
+
+DATA go_error TYPE REF TO cx_root.
+
+TYPES: BEGIN OF ts_it,
+         name      TYPE string,
+         planetype TYPE saplane-planetype,
+         go_air    TYPE REF TO lcl_airplane,
+       END OF ts_it.
+
+DATA gs_it TYPE ts_it.
+DATA gt_it TYPE TABLE OF ts_it.
+data go_air type REF TO lcl_airplane.
+
+START-OF-SELECTION.
+
+
+  PARAMETERS pa_name TYPE string.
+  CREATE OBJECT go_carrier EXPORTING iv_name = 'Lufthansa'.
+INCLUDE Z13_MAIN_APPEND.
+*  INCLUDE z01_main_append.
+
+
+  SELECT name saplane~planetype art seatsmax zz_cargo
+    FROM
+       zairplanes INNER JOIN saplane
+      ON zairplanes~planetype = saplane~planetype
+      INTO gs_daten.
+    gs_it-name = gs_daten-name.
+    gs_it-planetype = gs_daten-planetype.
+*    IF sy-dbcnt MOD 8 = 0.
+*      CREATE OBJECT go_carrier EXPORTING iv_name = 'Singapore Airlines'.
+*      INCLUDE z01_main_append.
+    "APPEND go_carrier TO gt_carrier.
+    " ENDIF.
+
+    CASE gs_daten-art.
+      WHEN 'P'.
+        TRY.
+             go_air = new lcl_passenger_plane(
+                ivp_name      = gs_daten-name
+                ivp_planetype = gs_daten-planetype
+                iv_seats      = gs_daten-seatsmax ).
+
+            go_carrier->add_airplane( io_plane = go_air  ).
+            gs_it-go_air = go_air.
+            APPEND gs_it TO gt_it.
+          CATCH zcx_bc401_13 INTO go_error.
+            WRITE: / go_error->get_text( ).
+        ENDTRY.
+
+      WHEN 'F'.
+        TRY.
+            CREATE OBJECT go_cargo
+              EXPORTING
+                ivc_name      = gs_daten-name
+                ivc_planetype = gs_daten-planetype
+                iv_cargo      = gs_daten-zz_cargo.
+            go_carrier->add_airplane( io_plane =  go_cargo ).
+            gs_it-go_air = go_cargo.
+            APPEND gs_it TO gt_it.
+          CATCH zcx_bc401_13  INTO go_error.
+            WRITE: / go_error->get_text( ).
+
+        ENDTRY.
+    ENDCASE.
+  ENDSELECT.
+
+
+*  DATA go_partner TYPE REF TO lif_partner.
+*  go_partner = go_carrier.
+*  go_partner->display_partner( ).
+go_carrier->display_attributes( ).
+  "go_carrier->lif_partner~display_partner( ).
+  ULINE.
+
+  ULINE.
+  CALL METHOD lcl_airplane=>display_n_o_airplanes .
+
+  WRITE: / 'Anzahl Flugzeugobjekte aus FM', lcl_airplane=>get_n_o_airplanes( ).
+  
+  *&---------------------------------------------------------------------*
+*&  Include           ZBC401_01_AGENCY
+*&---------------------------------------------------------------------*
+"Dieses Include wird mehrfach genutzt - bitte Vorsicht bei Änderungen
+INTERFACE lif_partner.
+  METHODS display_partner.
+ENDINTERFACE.
+
+INTERFACE lif_lodging.
+  INTERFACES lif_partner.
+  METHODS display_partner.
+ENDINTERFACE.
+
+CLASS lcl_demo DEFINITION.
+  PUBLIC SECTION.
+    INTERFACES lif_lodging.
+ENDCLASS.
+
+CLASS lcl_demo IMPLEMENTATION.
+  METHOD lif_partner~display_partner.
+  ENDMETHOD.
+  METHOD lif_lodging~display_partner.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+
+CLASS lcl_airplane DEFINITION .
+
+
+  PUBLIC SECTION. "Verwendbar von allen Programmen oder aus allen anderen Klassen
+
+    " Kann keine Parameter und keine Ausnahmen beinhalten
+    CLASS-METHODS class_constructor. "Wird als erstes aufgerufen, sobald wir auf die Klasse zugreifen
+    "Methode Constructor wird automatisch bei Create Object aufgerufen
+    METHODS  constructor   " Nur Importing-Parameter und Ausnahmen
+      IMPORTING iv_name      TYPE string
+                iv_planetype TYPE saplane-planetype
+      RAISING   zcx_bc401_13 .
+
+    METHODS display_attributes. "Zugriff auf alle Instanz- und statische Komponenten
+    CLASS-METHODS display_n_o_airplanes. ""Nur Zugriff auf statische Komponenten
+    CLASS-METHODS get_n_o_airplanes RETURNING VALUE(rv_count) TYPE i.
+    "Delegationsmethode Statische öffentlich Methode (zur Prüfung des Flugzeugtyps)
+    CLASS-METHODS get_technical_attributes
+      IMPORTING iv_flugzeugtyp TYPE saplane-planetype
+      EXPORTING ev_weight      TYPE saplane-weight
+                ev_tankcap     TYPE saplane-tankcap
+      RAISING   zcx_bc401_13 .
+    DATA mv_name      TYPE string .
+  PROTECTED SECTION.
+    CONSTANTS c_pos_1 TYPE i VALUE 30.
+  PRIVATE SECTION.  " Nur Verwendbar innerhalb der Klasse
+
+    "Interne Tabelle auf SAPLANE statisch
+    CLASS-DATA gt_planetypes TYPE ty_planetypes.
+    "Instanzattribute
+    DATA: " mv_name      TYPE string,
+      mv_planetype TYPE saplane-planetype,
+      mv_weight    TYPE saplane-weight,
+      mv_tankcap   TYPE saplane-tankcap.
+    "Statische Attribute
+    CLASS-DATA gv_n_o_airplanes TYPE i.
+
+
+ENDCLASS.
+
+CLASS lcl_airplane IMPLEMENTATION.
+
+  METHOD class_constructor.
+    SELECT * FROM saplane INTO TABLE gt_planetypes.
+  ENDMETHOD.
+  METHOD constructor.
+    TRY.
+        CALL METHOD get_technical_attributes
+          EXPORTING
+            iv_flugzeugtyp = iv_planetype
+          IMPORTING
+            ev_weight      = mv_weight
+            ev_tankcap     = mv_tankcap.
+        mv_name = iv_name.
+        mv_planetype = iv_planetype.
+        ADD 1 TO gv_n_o_airplanes.
+      CATCH zcx_bc401_13 INTO DATA(lo_error).
+        RAISE EXCEPTION lo_error. "TYPE zcx_bc401_13 EXPORTING ."previous = lo_error textid = zcx_bc401=>wrong_constructor.
+    ENDTRY.
+
+  ENDMETHOD.
+  METHOD display_attributes.
+    WRITE: / icon_ws_plane AS ICON,
+           / 'Flugzeugname'(fln), AT c_pos_1 mv_name,
+           / 'Flugzeugtyp'(flt), AT c_pos_1 mv_planetype,
+           / 'Gewicht'(gew), AT c_pos_1 mv_weight LEFT-JUSTIFIED,
+           / 'Tank-Kapazität'(tnk), AT c_pos_1 mv_tankcap LEFT-JUSTIFIED.
+  ENDMETHOD.
+  METHOD display_n_o_airplanes.
+    WRITE: / 'Anzahl Flugzeuge'(anz), AT c_pos_1 gv_n_o_airplanes LEFT-JUSTIFIED.
+  ENDMETHOD.
+  METHOD get_n_o_airplanes.
+    rv_count = gv_n_o_airplanes.
+  ENDMETHOD.
+  METHOD get_technical_attributes.
+    DATA ls_saplane TYPE saplane.
+    READ TABLE gt_planetypes INTO ls_saplane
+         WITH KEY planetype = iv_flugzeugtyp.
+    IF sy-subrc = 0.
+      ev_weight = ls_saplane-weight.
+      ev_tankcap = ls_saplane-tankcap.
+    ELSE.
+      RAISE EXCEPTION TYPE zcx_bc401_13 EXPORTING textid = zcx_bc401=>wrong_planetype
+                                               planetype = iv_flugzeugtyp.
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.
+
+
+CLASS lcl_passenger_plane DEFINITION INHERITING FROM lcl_airplane.
+  PUBLIC SECTION.
+    METHODS  constructor  " Nur Importing-Parameter und Ausnahmen
+      IMPORTING ivp_name      TYPE string
+                ivp_planetype TYPE saplane-planetype
+                iv_seats      TYPE saplane-seatsmax
+      RAISING   zcx_bc401_13.
+
+    METHODS display_attributes REDEFINITION.
+
+  PRIVATE SECTION.
+    DATA mv_seats TYPE saplane-seatsmax.
+ENDCLASS.
+CLASS lcl_passenger_plane IMPLEMENTATION.
+  METHOD constructor.
+
+    super->constructor( EXPORTING iv_name = ivp_name iv_planetype = ivp_planetype ).
+    mv_seats = iv_seats.
+
+  ENDMETHOD.
+  METHOD display_attributes.
+    super->display_attributes( ).
+    WRITE: / 'Anzahl Plätze', AT c_pos_1 mv_seats LEFT-JUSTIFIED.
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_cargo_plane DEFINITION INHERITING FROM lcl_airplane FINAL.
+  PUBLIC SECTION.
+    METHODS  constructor  " Nur Importing-Parameter und Ausnahmen
+      IMPORTING ivc_name      TYPE string
+                ivc_planetype TYPE saplane-planetype
+                iv_cargo      TYPE scplane-cargomax
+      RAISING   zcx_bc401_13.
+    METHODS display_attributes REDEFINITION.
+    METHODS get_cargo RETURNING VALUE(rv_cargo) TYPE scplane-cargomax.
+
+  PRIVATE SECTION.
+    DATA mv_cargo TYPE scplane-cargomax.
+ENDCLASS.
+CLASS lcl_cargo_plane IMPLEMENTATION.
+  METHOD constructor.
+    super->constructor( EXPORTING iv_name = ivc_name iv_planetype = ivc_planetype  ).
+    mv_cargo = iv_cargo.
+  ENDMETHOD.
+  METHOD display_attributes.
+    super->display_attributes( ).
+    WRITE: / 'Maximales Ladegwicht', AT c_pos_1 mv_cargo LEFT-JUSTIFIED.
+  ENDMETHOD.
+  METHOD get_cargo.
+    rv_cargo = mv_cargo.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_carrier DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_partner.
+    METHODS constructor IMPORTING iv_name TYPE string .
+    METHODS display_attributes.
+    METHODS add_airplane IMPORTING io_plane TYPE REF TO lcl_airplane.
+    METHODS get_airplane IMPORTING iv_name TYPE string RETURNING VALUE(ro_air) TYPE REF TO lcl_airplane.
+
+  PRIVATE SECTION.
+
+    DATA:
+      mv_name TYPE string.
+    DATA   mt_airplanes TYPE TABLE OF REF TO lcl_airplane .
+
+    METHODS display_airplanes.
+    METHODS get_max_cargo RETURNING VALUE(rv_cargo) TYPE scplane-cargomax.
+
+
+ENDCLASS.
+
+
+*---------------------------------------------------------------------*
+*       CLASS lcl_carrier IMPLEMENTATION
+*---------------------------------------------------------------------*
+CLASS lcl_carrier IMPLEMENTATION.
+  METHOD lif_partner~display_partner.
+    CALL METHOD me->display_attributes( ).
+  ENDMETHOD.
+  METHOD constructor.
+    mv_name = iv_name.
+  ENDMETHOD.                    "constructor
+
+  METHOD display_attributes.
+    SKIP 2.
+    WRITE: icon_flight AS ICON,
+           mv_name.
+    ULINE.
+    ULINE.
+    CALL METHOD me->display_airplanes( ).
+    WRITE: / 'Gößstes Ladegwicht der Frachtflugzeuge',
+             me->get_max_cargo( ),
+             'von',
+             lines( mt_airplanes ), 'Flugzeugen'.
+  ENDMETHOD.                    "display_attributes
+  METHOD add_airplane.
+    APPEND io_plane TO mt_airplanes.
+  ENDMETHOD.
+  METHOD display_airplanes.
+    " DATA lo_airplanes TYPE REF TO lcl_airplane.
+    DATA lo_cargo TYPE REF TO lcl_cargo_plane.
+    DATA lo_pass TYPE REF TO lcl_passenger_plane.
+    LOOP AT mt_airplanes INTO DATA(lo_airplanes).
+      lo_airplanes->display_attributes( ).
+
+
+      TRY.
+          lo_cargo ?= lo_airplanes.
+
+        CATCH cx_sy_move_cast_error.
+          "MESSAGE ' Die Referenz ist keine Cargo-Refrenz' TYPE 'I'.
+      ENDTRY.
+
+
+    ENDLOOP.
+  ENDMETHOD.
+  METHOD get_max_cargo.
+    DATA go_class TYPE REF TO cl_abap_classdescr.
+    DATA lo_airplane TYPE REF TO lcl_airplane.
+    DATA lo_cargo TYPE REF TO lcl_cargo_plane.
+    DATA lv_akt_cargo TYPE scplane-cargomax.
+    LOOP AT mt_airplanes INTO lo_airplane.
+      go_class ?= cl_abap_typedescr=>describe_by_object_ref( lo_airplane ).
+      IF go_class->get_relative_name( ) = 'LCL_CARGO_PLANE'.
+        lo_cargo ?= lo_airplane.
+        lv_akt_cargo = lo_cargo->get_cargo( ).
+        IF lv_akt_cargo > rv_cargo.
+          rv_cargo = lv_akt_cargo.
+        ENDIF.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+  METHOD get_airplane.
+    READ TABLE mt_airplanes INTO ro_air
+      WITH KEY table_line->mv_name = iv_name.
+  ENDMETHOD.
+ENDCLASS.                    "lcl_carrier IMPLEMENTATION
+
+*&---------------------------------------------------------------------*
+*&  Include           ZBC401_01_MAIN_TOP
+*&---------------------------------------------------------------------*
+
+DATA go_pass TYPE REF TO lcl_passenger_plane.
+DATA go_cargo TYPE REF TO lcl_cargo_plane.
+DATA go_carrier TYPE REF TO lcl_carrier.
+DATA: BEGIN OF gs_daten,
+        name      TYPE string,
+        planetype TYPE saplane-planetype,
+        art       TYPE zairplanes-art,
+        seatsmax  TYPE saplane-seatsmax,
+        zz_cargo  TYPE scplane-cargomax,
+      END OF gs_daten.
+
+DATA gt_carrier TYPE TABLE OF REF TO lcl_carrier.
