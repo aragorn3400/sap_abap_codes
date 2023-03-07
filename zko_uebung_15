@@ -1,0 +1,96 @@
+"Web Dynpro
+" Im COMPONENTCONTROLLER;
+method READ_SCARR .
+
+
+
+    DATA lo_nd_eingabe TYPE REF TO if_wd_context_node.
+
+    DATA lo_el_eingabe TYPE REF TO if_wd_context_element.
+    DATA ls_eingabe TYPE wd_this->element_eingabe.
+    DATA lv_carrid TYPE wd_this->element_eingabe-carrid.
+
+*   navigate from <CONTEXT> to <EINGABE> via lead selection
+    lo_nd_eingabe = wd_context->get_child_node( name = wd_this->wdctx_eingabe ).
+
+*   @TODO handle non existant child
+*   IF lo_nd_eingabe IS INITIAL.
+*   ENDIF.
+
+*   get element via lead selection
+    lo_el_eingabe = lo_nd_eingabe->get_element( ).
+*   @TODO handle not set lead selection
+    IF lo_el_eingabe IS INITIAL.
+    ENDIF.
+
+*   get single attribute
+    lo_el_eingabe->get_attribute(
+      EXPORTING
+        name =  `CARRID`
+      IMPORTING
+        value = lv_carrid ).
+
+
+*****************************************************
+*    Datenbeschaffung aus Klasse
+
+
+  DATA ls_ausgabe TYPE wd_this->element_ausgabe.    "Bu satır aşağıda çıkıyor bunu select'in ğstğne almamız lazım
+
+
+SELECT SINGLE * FROM scarr INTO ls_ausgabe            " Bunu ben yazdım
+  WHERE carrid = lv_carrid.
+
+*CALL METHOD cl_net310_flightmodel=>read_carrier       "Hazır classı select için hoca çağırdı.
+*    EXPORTING
+*       iv_carrid   = lv_carrid
+*     IMPORTING
+*       es_carrier  = ls_ausgabe
+**       et_carriers =
+*      .
+*************************************************
+
+
+
+
+  DATA lo_nd_ausgabe TYPE REF TO if_wd_context_node.
+
+  DATA lo_el_ausgabe TYPE REF TO if_wd_context_element.
+
+*  DATA ls_ausgabe TYPE wd_this->element_ausgabe.
+
+* navigate from <CONTEXT> to <AUSGABE> via lead selection
+  lo_nd_ausgabe = wd_context->get_child_node( name = wd_this->wdctx_ausgabe ).
+
+* @TODO handle non existant child
+* IF lo_nd_ausgabe IS INITIAL.
+* ENDIF.
+
+* get element via lead selection
+  lo_el_ausgabe = lo_nd_ausgabe->get_element( ).
+
+* @TODO handle not set lead selection
+  IF lo_el_ausgabe IS INITIAL.
+  ENDIF.
+
+* @TODO fill static attributes
+* ls_ausgabe = xxx->get_yyy( ).
+
+* set all declared attributes
+  lo_el_ausgabe->set_static_attributes(
+     static_attributes = ls_ausgabe ).
+
+endmethod.
+
+--------------
+
+
+method ONACTIONSCARR_LESEN .
+  DATA lo_componentcontroller TYPE REF TO ig_componentcontroller .
+  lo_componentcontroller =   wd_this->get_componentcontroller_ctr( ).
+
+    lo_componentcontroller->read_scarr( ).
+*
+*    wd_comp_controller->read_scarr( ).
+
+endmethod.
