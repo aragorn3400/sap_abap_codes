@@ -1,28 +1,28 @@
 REPORT Z99_TRANSAKTION_STEUERUNG.
 data gs_bdc type bdcdata.                   
-data gt_bdc type TABLE OF bdcdata.                    "Programın datası; bdcdata
-PARAMETERS pa_fc type sy-ucomm DEFAULT 'FC3'.         "Fonksiyn seçimi istersek ,bunu istemezsek direkt aşağıda fonksiyonu yazabiliriz;'FC3'
+data gt_bdc type TABLE OF bdcdata.                    
+PARAMETERS pa_fc type sy-ucomm DEFAULT 'FC3'.       
 
 "Startdynpro 99      
-gs_bdc-program = 'SAPMZBC410_SOLUTION_01'.           "2 dynpro varsa önce ilk dynproyu yazarız 
+gs_bdc-program = 'SAPMZBC410_SOLUTION_01'.          
 gs_bdc-dynpro  = '0099'.
 gs_bdc-dynbegin = 'X'.
 append gs_bdc to gt_bdc.
 clear gs_bdc.
 
 
-gs_bdc-fnam = 'BDC_OKCODE'.                         "fonksiyon name
-gs_bdc-fval = 'ENTER'.                              "fonksiyon değeri
+gs_bdc-fnam = 'BDC_OKCODE'.                        
+gs_bdc-fval = 'ENTER'.                              
 append gs_bdc to gt_bdc.
 clear gs_bdc.
-                                                   " Önce Hangi program hangi dynpro belirtiyoruz
-gs_bdc-program = 'SAPMZBC410_SOLUTION_01'.        " 2 dynpro varsa önce sonra 2. dynproyu yazarız 
+                                                  
+gs_bdc-program = 'SAPMZBC410_SOLUTION_01'.       
 gs_bdc-dynpro  = '0100'.
 gs_bdc-dynbegin = 'X'.
 append gs_bdc to gt_bdc.
 clear gs_bdc.
 
-gs_bdc-fnam = 'SDYN_CONN-CARRID'.                   " Daha sonra istediğimiz feldleri dolduruyoruz
+gs_bdc-fnam = 'SDYN_CONN-CARRID'.                 
 gs_bdc-fval = 'LH'.
 append gs_bdc to gt_bdc.
 clear gs_bdc.
@@ -37,7 +37,7 @@ gs_bdc-fval = '10.07.2021'.
 append gs_bdc to gt_bdc.
 clear gs_bdc.
 
-"OK-Code setzen und auslösen                        "en sonda istediğimiz fonksiyon kodunu çalıştırıyoruz.
+"OK-Code setzen und auslösen                       
 gs_bdc-fnam = 'BDC_OKCODE'.
 gs_bdc-fval = pa_fc.
 append gs_bdc to gt_bdc.
@@ -54,4 +54,4 @@ gs_bdc-fval = 'SELE'.
 append gs_bdc to gt_bdc.
 clear gs_bdc.
 
-call transaction 'Z01_SOLUTION' using gt_bdc mode 'E'.   "Ayrıca N,A modlarıda var. A;standart  E;hata olduğunda göster  N;gösterme
+call transaction 'Z01_SOLUTION' using gt_bdc mode 'E'.  
