@@ -1,0 +1,93 @@
+"Exportieren einer Tabelle als Excel-Datei
+
+REPORT z05_excel_exportieren.
+
+*1-dahili tabloya db tablodan bilgileri atarız ki bu dahli tabloyu dışarıya aktaracağız
+*2-Gui Download fonksiyonunu çağırırz.
+*3- Fonksiyondaki filename karşısına data tanımlarız
+*4- Kullanıcı nereye kaydedeceğini göstermesi için parametre tanımlar ve search help için class çağırırız.
+*5-Filename için concatenate kullanırız,burda isim belirleyeceğiz,biz tarih ve saati isim olarak verdik.
+*6-Bu şeklde yapınca mandt dahil tim bilgi geldi,eğer gelmesini istemiyorsak yada istediğimiz kolonları almak istiyorsak
+* o kolonları alan bir type oluşturup bilgileri o type'a tanımlı dahili tabloya atarız.
+*7-Kolon başlıklarının atılmadığını gördük ,bunun için gui_download'daki fieldname karşısına bir tablo tanımlayıp kolon başlıklarını ona atacağız
+
+*6-
+
+TYPES:BEGIN OF gty_scarr,
+carrid   TYPE s_carr_id   ,
+carrname  TYPE s_carrname ,
+currcode TYPE s_currcode  ,
+url     TYPE s_carrurl    ,
+END OF gty_scarr.
+
+data:gt_scarr TYPE TABLE OF gty_scarr.
+
+
+*7-
+TYPES :BEGIN OF gty_header,
+  line TYPE char30,
+  END OF gty_header.
+
+DATA:gt_header TYPE TABLE OF gty_header,
+     gs_header TYPE gty_header.
+
+
+*3-
+DATA:gv_filename TYPE string.
+
+*4-
+PARAMETERS:p_path TYPE string.
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_path.
+CALL METHOD cl_gui_frontend_services=>directory_browse
+  CHANGING
+    selected_folder      = p_path
+  EXCEPTIONS
+    cntl_error           = 1
+    error_no_gui         = 2
+    not_supported_by_gui = 3
+    OTHERS               = 4
+        .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+
+
+START-OF-SELECTION.
+
+*1-
+SELECT * FROM scarr INTO CORRESPONDING FIELDS OF TABLE gt_scarr.
+
+*5-
+CONCATENATE p_path
+            '/'
+            sy-datum
+            '-'
+            sy-uzeit
+            '.xls'
+ INTO gv_filename.
+
+*7-
+
+gs_header-line = 'Short Description'.
+APPEND gs_header TO gt_header.
+gs_header-line = 'Airlines'.
+APPEND gs_header TO gt_header.
+gs_header-line = 'Currency'.
+APPEND gs_header TO gt_header.
+gs_header-line = 'URL'.
+APPEND gs_header TO gt_header.
+
+
+
+
+*2-
+CALL FUNCTION 'GUI_DOWNLOAD'
+  EXPORTING
+    filename                        = gv_filename                      "Kaydedeceğimiz dosya için göstereceğimiz yol
+   filetype                        = 'ASC'                             "Kaydetmek istediğimiz dosya tipi
+   write_field_separator           = 'X'                               "Kolonları ayırmak için
+
+  TABLES
+    data_tab                        = gt_scarr                         "Dahili tablo
+   fieldnames                      = gt_header.
