@@ -1,0 +1,75 @@
+
+" Importieren einer Excel-Tabelle, Anzeige mit Klasse ;
+
+Parametre;
+IV_FILE	Importing	Type	RLGRAP-FILENAME
+
+Attribut;
+GT_INTERN	Instance Attribute	Public
+GS_INTERN	Instance Attribute	Public	Type	ALSMEX_TABLINE
+GT_ITAB	Instance Attribute	Public
+GS_ITAB	Instance Attribute	Private	Type	ZTY_ITAB
+
+Queltext;
+METHOD imp_exc.
+
+    FIELD-SYMBOLS:<gfv_value>  TYPE any.
+
+  CALL FUNCTION 'ALSM_EXCEL_TO_INTERNAL_TABLE'
+  EXPORTING
+    filename                      = iv_file
+    i_begin_col                   = 1             "1.Kolon
+    i_begin_row                   = 2              "2.Satır,Bailık bilgilerini istemiyorsak 2den başlatırız.
+    i_end_col                     = 5              "Son kolon
+    i_end_row                     = 15             "Son satır
+  TABLES
+    intern                        = gt_intern
+ EXCEPTIONS
+   inconsistent_parameters       = 1
+   upload_ole                    = 2
+   OTHERS                        = 3  .
+   
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+LOOP AT gt_intern INTO gs_intern.
+  ASSIGN COMPONENT gs_intern-col OF STRUCTURE gs_itab TO <gfv_value>.    "Gelen veriyi fs'ye aldık
+  <gfv_value> = gs_intern-value.                                         "Onuda gs_interne attık
+  AT END OF row.                                                         "satır bitince kayıt yap
+    APPEND gs_itab TO gt_itab.
+  ENDAT.
+
+ENDLOOP.
+
+zcl_wko_05=>display_alv( it_tabelle = gt_itab ).
+
+
+ENDMETHOD.
+
+
+Im Programm anzeigen
+-----------------------
+REPORT z05_excel_importieren_02.
+
+DATA:go_ref TYPE REF TO z05_excel_imp.
+
+PARAMETERS:p_file TYPE rlgrap-filename.
+
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
+
+  CALL FUNCTION 'F4_FILENAME'
+*   EXPORTING
+*     PROGRAM_NAME        = SYST-CPROG
+*     DYNPRO_NUMBER       = SYST-DYNNR
+*     FIELD_NAME          = ' '
+   IMPORTING
+     file_name           = p_file    .
+
+START-OF-SELECTION.
+
+CREATE OBJECT go_ref.
+
+CALL METHOD go_ref->imp_exc
+  EXPORTING
+    iv_file = p_file  .
