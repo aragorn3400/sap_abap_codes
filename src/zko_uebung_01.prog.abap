@@ -40,6 +40,6 @@ AT SELECTION-SCREEN OUTPUT.
     IF screen-name = 'DAS_RES'.
       das_res = p4.
     ENDIF.
-    MODIFY SCREEN.
+    MODIFY SCREEN..
 
   ENDLOOP.
