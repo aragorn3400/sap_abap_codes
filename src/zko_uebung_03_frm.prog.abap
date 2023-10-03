@@ -12,7 +12,7 @@
 *& <--  p2        text
 *&---------------------------------------------------------------------*
 FORM get_data .
-  SELECT    sflight~carrid        "Almak istediğimiz satırları yazıyoruz,structure ile aynı sırada yapmamız lazım
+  SELECT    sflight~carrid
             sflight~fldate
             sflight~planetype
             sflight~price
@@ -49,7 +49,7 @@ FORM set_fcat .
       program_error          = 2
       OTHERS                 = 3.
 
-  READ TABLE gt_fieldcatalog ASSIGNING FIELD-SYMBOL(<gfs_fcat>) WITH KEY fieldname = 'FLDATE'.  "FLDATE kolonu editable yaptık.
+  READ TABLE gt_fieldcatalog ASSIGNING FIELD-SYMBOL(<gfs_fcat>) WITH KEY fieldname = 'FLDATE'.
   IF sy-subrc = 0.
     <gfs_fcat>-edit = abap_true.
   ENDIF.
