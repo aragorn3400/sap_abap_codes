@@ -19,4 +19,4 @@ DATA: gt_list TYPE TABLE OF gty_list,
 DATA: gt_fieldcatalog TYPE slis_t_fieldcat_alv,
       gs_fieldcatalog TYPE slis_fieldcat_alv.
 
-DATA: gs_layout TYPE slis_layout_alv.
+DATA: gs_layout TYPE slis_layout_alv..
