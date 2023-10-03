@@ -27,8 +27,7 @@ DATA: p4 TYPE i.
 INITIALIZATION.
   sscrfields-functxt_01 = 'Kalkulieren'.
   sscrfields-functxt_02 = 'Löschen'.
-* sscrfields-search_btn = 'ICON_GENERATE'.
-* Weil wir kein PF-STATUS haben, können wir kein ICON einsetzen.
+
 
 AT SELECTION-SCREEN.
   IF sscrfields-ucomm = 'FC01'.
