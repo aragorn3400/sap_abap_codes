@@ -1,14 +1,14 @@
 *&---------------------------------------------------------------------*
-*& Report ZKO_UEBUNG_04
+*& Report ZKO_PROJECT_04
 *&---------------------------------------------------------------------*
 *&
 *&----------------------------------------------------------------------*
-REPORT zko_uebung_04.
+REPORT zko_project_04.
 
 " Ein anderes Beispiel mit verschiedenen Funktionen mit der Tabelle MARC
 
-INCLUDE zko_uebung_04_top.
-INCLUDE zko_uebung_04_frm.
+INCLUDE zko_project_04_top.
+INCLUDE zko_project_04_frm.
 
 
 
