@@ -5,15 +5,16 @@
 *&---------------------------------------------------------------------*
 REPORT zko_project_06.
 
-" ALV (ABAP List Viewer) und andere Funktionalitäten
-
+" Ein Beispiel für eine dynamische Tabelle
 
 INCLUDE zko_project_06_top.
 INCLUDE zko_project_06_frm.
 
+
 START-OF-SELECTION.
 
   PERFORM get_data.
-  PERFORM set_layo.
   PERFORM set_fcat.
-  PERFORM display_data.
+  PERFORM create_dyn_table.
+  PERFORM fill_dyn_table.
+  PERFORM display.
