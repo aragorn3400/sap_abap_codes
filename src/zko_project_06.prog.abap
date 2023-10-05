@@ -1,15 +1,15 @@
 *&---------------------------------------------------------------------*
-*& Report ZKO_UEBUNG_06
+*& Report ZKO_PROJECT_06
 *&---------------------------------------------------------------------*
 *&
 *&---------------------------------------------------------------------*
-REPORT zko_uebung_06.
+REPORT zko_project_06.
 
 " ALV (ABAP List Viewer) und andere Funktionalitäten
 
 
-INCLUDE zko_uebung_6_top.
-INCLUDE zko_uebung_6_frm.
+INCLUDE zko_project_06_top.
+INCLUDE zko_project_06_frm.
 
 START-OF-SELECTION.
 

@@ -3,17 +3,16 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <PROGDIR>
-    <NAME>ZKO_UEBUNG_06</NAME>
-    <SUBC>1</SUBC>
+    <NAME>ZKO_PROJECT_06_TOP</NAME>
+    <SUBC>I</SUBC>
     <RLOAD>D</RLOAD>
-    <FIXPT>X</FIXPT>
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
    <TPOOL>
     <item>
      <ID>R</ID>
-     <ENTRY>Include ZKO_UEBUNG_06</ENTRY>
-     <LENGTH>21</LENGTH>
+     <ENTRY>Include ZKO_UEBUNG_6_TOP</ENTRY>
+     <LENGTH>24</LENGTH>
     </item>
    </TPOOL>
   </asx:values>
