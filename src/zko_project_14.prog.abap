@@ -5,9 +5,9 @@
 *&---------------------------------------------------------------------*
 REPORT zko_project_14.
 
+" Programm zur Verwaltung studentischer Vorlesungsunterlagen auf dem Selektion-Screen
+
 INCLUDE zko_project_14_top.
-
-
 
 INITIALIZATION.
   gv_text1 = 'Do process'.
