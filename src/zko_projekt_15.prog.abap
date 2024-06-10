@@ -5,7 +5,7 @@
 *&---------------------------------------------------------------------*
 REPORT zko_projekt_14.
 
-" Batch-Input – Eingabe mehrerer Datensätze in die Tabelle
+"Batch-Input – Eingabe mehrerer Datensätze in die Tabelle
 
 INCLUDE zko_projekt_14_top.
 INCLUDE zko_projekt_14_frm.
